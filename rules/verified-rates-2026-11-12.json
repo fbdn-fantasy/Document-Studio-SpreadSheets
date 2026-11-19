@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "id": "official-rate-research-2026-11-12-v1",
+  "verifiedOn": "2026-11-12",
+  "status": "source-verified-limited-scope-not-complete-payroll",
+  "executionPolicy": "Never execute formula strings. Implement typed calculations with decimal arithmetic, explicit eligibility and date checks. Reject unsupported situations rather than returning zero. These records verify source rates, not application implementation.",
+  "rules": [
+    {
+      "id": "ZA-INDIVIDUAL-ANNUAL-2027-v1",
+      "country": "ZA", "currency": "ZAR", "taxYear": "2027",
+      "effectiveFrom": "2026-03-01", "effectiveTo": "2027-02-28",
+      "kind": "annual-personal-income-tax-before-medical-credits",
+      "input": "Already determined non-negative annual taxable income; age at the end of the tax year. Not gross pay.",
+      "brackets": [
+        {"lower": "0", "base": "0", "rate": "0.18"},
+        {"lower": "245100", "base": "44118", "rate": "0.26"},
+        {"lower": "383100", "base": "79998", "rate": "0.31"},
+        {"lower": "530200", "base": "125599", "rate": "0.36"},
+        {"lower": "695800", "base": "185215", "rate": "0.39"},
+        {"lower": "887000", "base": "259783", "rate": "0.41"},
+        {"lower": "1878600", "base": "666339", "rate": "0.45"}
+      ],
+      "rebates": {"primary": "17820", "additionalAge65": "9765", "additionalAge75": "3249"},
+      "calculation": "Select highest lower <= income. max(0, base + (income-lower)*rate - applicable cumulative rebates).",
+      "limitations": ["Not a full PAYE withholding implementation", "No directives, medical credits, fringe benefits, retirement deductions, irregular pay, annualisation or cumulative reconciliation", "No special trusts or non-individual taxpayer treatment"],
+      "sources": ["https://www.sars.gov.za/tax-rates/income-tax/rates-of-tax-for-individuals/", "https://www.sars.gov.za/wp-content/uploads/Ops/Guides/PAYE-GEN-01-G01-Guide-for-Employers-in-respect-of-Tax-Deduction-Tables-External-Guide.pdf"],
+      "derivedTestVectors": [
+        {"income": "99000", "age": 30, "tax": "0.00"},
+        {"income": "245100", "age": 30, "tax": "26298.00"},
+        {"income": "383100", "age": 30, "tax": "62178.00"},
+        {"income": "153250", "age": 65, "tax": "0.00"},
+        {"income": "171300", "age": 75, "tax": "0.00"}
+      ]
+    },
+    {
+      "id": "ZA-UIF-MONTHLY-2021-v1",
+      "country": "ZA", "currency": "ZAR", "effectiveFrom": "2021-06-01", "effectiveTo": null,
+      "verifiedThrough": "2026-11-12", "kind": "monthly-capped-shared-contribution",
+      "employeeRate": "0.01", "employerRate": "0.01", "monthlyRemunerationCap": "17712.00",
+      "eligibility": "Employer confirms employee covered by UIF and provides UIF remuneration, not unclassified gross pay. Exclude employment below 24 hours/month and excluded public-office/government categories.",
+      "calculation": "For an eligible employee, each share = min(nonnegative monthly UIF remuneration,17712)*0.01; otherwise explicit exempt status with reason.",
+      "recipient": "SARS or UIF Commissioner according to registration",
+      "frequency": "monthly",
+      "dueDateRule": "7th of following month; move to preceding business day if weekend/public holiday. Requires verified South African holiday calendar.",
+      "sources": ["https://www.sars.gov.za/types-of-tax/unemployment-insurance-fund/"],
+      "derivedTestVectors": [
+        {"remuneration": "10000", "employee": "100.00", "employer": "100.00"},
+        {"remuneration": "17712", "employee": "177.12", "employer": "177.12"},
+        {"remuneration": "50000", "employee": "177.12", "employer": "177.12"}
+      ]
+    },
+    {
+      "id": "ZA-SDL-2001-v1",
+      "country": "ZA", "currency": "ZAR", "effectiveFrom": "2001-04-01", "effectiveTo": null,
+      "verifiedThrough": "2026-11-12", "kind": "employer-levy",
+      "employeeRate": "0", "employerRate": "0.01",
+      "eligibility": "Expected leviable remuneration in the following 12 months exceeds R500000 and employer is not otherwise exempt. Government, qualifying public entities/PBOs and certified municipalities need separate eligibility assessment.",
+      "input": "SDL leviable remuneration after applicable allowable deductions and statutory exclusions, independently classified.",
+      "calculation": "eligible ? monthlyLeviableAmount*0.01 : exempt-with-reason",
+      "recipient": "SARS", "frequency": "monthly",
+      "dueDateRule": "7th of following month, preceding business day when weekend/public holiday.",
+      "sources": ["https://www.sars.gov.za/types-of-tax/skills-development-levy/", "https://www.sars.gov.za/guide-for-employers-in-respect-of-employees-tax-2027/"],
+      "derivedTestVectors": [{"eligible": true, "leviableAmount": "100000", "employer": "1000.00", "employee": "0.00"}]
+    },
+    {
+      "id": "ZA-VAT-STANDARD-2026-SNAPSHOT-v1",
+      "country": "ZA", "currency": "ZAR", "effectiveFrom": "2026-02-25", "effectiveTo": null,
+      "effectiveDateMeaning": "Publication snapshot, not original commencement of the 15% rate.",
+      "verifiedThrough": "2026-11-12", "kind": "explicit-standard-rated-supply",
+      "rate": "0.15",
+      "eligibility": "Registered vendor and supply expressly classified standard-rated. Do not infer registration, zero rating, exemptions or input-tax recovery.",
+      "calculation": "exclusive tax=net*0.15; inclusive tax=gross*15/115",
+      "sources": ["https://www.sars.gov.za/tax-rates/other-taxes/"],
+      "derivedTestVectors": [{"exclusive": "1000", "tax": "150.00", "inclusive": "1150.00"}]
+    },
+    {
+      "id": "ZA-CIT-STANDARD-YE2027-v1",
+      "country": "ZA", "currency": "ZAR", "kind": "standard-company-tax-on-verified-taxable-income",
+      "assessmentYearEndFrom": "2026-04-01", "assessmentYearEndTo": "2027-03-31", "rate": "0.27",
+      "eligibility": "Ordinary company at standard rate; excludes SBC, turnover tax, SEZ and special regimes. Taxable income must already be determined; accounting profit is not automatically taxable income.",
+      "calculation": "nonnegative verified taxable income*0.27 before applicable credits/payments",
+      "sources": ["https://www.sars.gov.za/tax-rates/income-tax/companies-trusts-and-small-business-corporations-sbc/"],
+      "derivedTestVectors": [{"taxableIncome": "100000", "taxBeforeCredits": "27000.00"}]
+    }
+  ]
+}

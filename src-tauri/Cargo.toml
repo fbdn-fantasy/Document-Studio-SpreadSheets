@@ -1,0 +1,39 @@
+[package]
+name = "document-studio-spreadsheets"
+version = "1.8.0"
+license = "Apache-2.0"
+edition = "2021"
+description = "Offline spreadsheet and business workbook editor"
+authors = ["Forbidden_Fantasy"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
+tauri-plugin-window-state = "2"
+tauri-plugin-single-instance = "2"
+open = { version = "5.4.5", features = ["shellexecute-on-windows"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+ironcalc = { git = "https://github.com/ironcalc/IronCalc", rev = "2d3ad8773806c92b488dee757451caa8370224ee" }
+rust_decimal = { version = "1", features = ["serde-with-str"] }
+rusqlite = { version = "0.32", features = ["bundled"] }
+uuid = { version = "1", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+zip = { version = "4", default-features = false, features = ["deflate"] }
+calamine = "0.31"
+spreadsheet-ods = "1.0.4"
+icu_locale_core = "2"
+regex = "1"
+tempfile = "3"
+
+[target.'cfg(windows)'.dependencies]
+webview2-com = "0.39.1"
+windows-core = "0.62"
+
+[profile.release]
+strip = true
+opt-level = "s"
+lto = "thin"

@@ -1,0 +1,17 @@
+Document Studio Spreadsheets for 64-bit Intel and AMD Linux
+
+Requires glibc 2.39 or newer, GTK 3, and WebKitGTK 4.1.
+
+Extract the archive. Open a terminal in the extracted folder and run
+
+    ./install.sh
+
+Your package manager will show you what it needs to install. You may be
+asked for your administrator password. An internet connection may be
+needed to download system libraries.
+
+After installation, open Document Studio Spreadsheets from your application
+menu. You can remove the extracted folder and archive. To uninstall the app,
+use your distribution's software manager.
+
+The LICENSE file contains the application license.

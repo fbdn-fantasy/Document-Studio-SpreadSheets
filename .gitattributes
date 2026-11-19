@@ -1,2 +1,3 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+# Preserve the supplied license exactly, including its line endings.
+LICENSE -text
+*.sh text eol=lf
