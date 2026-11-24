@@ -38,6 +38,12 @@
   --soft: #252830;
   --accent-dark: #363044;
 }
+:root[data-theme="light"] .primary {
+  color: white;
+}
+:root[data-theme="light"] .primary:hover {
+  background: #603a8d;
+}
 * {
   box-sizing: border-box;
 }
@@ -207,11 +213,12 @@ main {
   flex-direction: column;
 }
 .topbar {
-  height: 82px;
+  min-height: 82px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 32px;
+  gap: 12px;
+  padding: 8px 32px;
   border-bottom: 1px solid var(--line);
   flex-shrink: 0;
 }
@@ -231,7 +238,12 @@ main {
 .top-actions {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 20px;
+}
+.top-actions > button {
+  white-space: nowrap;
 }
 .support-button {
   display: inline-flex;
@@ -1056,7 +1068,7 @@ td button {
 }
 @media (max-width: 1150px) {
   .topbar {
-    padding: 0 20px;
+    padding: 8px 20px;
   }
   .top-actions {
     gap: 10px;

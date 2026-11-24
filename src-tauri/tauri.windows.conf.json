@@ -1,0 +1,8 @@
+{
+  "bundle": {
+    "resources": {
+      "../docs/webview2/LICENSE.txt": "notices/webview2/LICENSE.txt",
+      "../docs/webview2/NOTICE.txt": "notices/webview2/NOTICE.txt"
+    }
+  }
+}

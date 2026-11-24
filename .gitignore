@@ -5,3 +5,15 @@ src-tauri/gen/schemas/
 src-tauri/target/
 __pycache__/
 *.log
+AGENTS.md
+.env
+.env.*
+.npmrc
+*.pem
+*.key
+*.pfx
+*.zip
+*.exe
+*.deb
+*.rpm
+*.tar.gz

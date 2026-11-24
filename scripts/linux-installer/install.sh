@@ -30,20 +30,19 @@ if [ -z "$manager" ]; then
 fi
 
 case "$manager" in
-    apt-get) package="$directory/packages/document-studio-spreadsheets.deb" ;;
-    dnf|zypper) package="$directory/packages/document-studio-spreadsheets.rpm" ;;
+    apt-get) set -- "$directory"/packages/*.deb ;;
+    dnf|zypper) set -- "$directory"/packages/*.rpm ;;
     *) echo "Installation requires APT, DNF, or Zypper." >&2; exit 1 ;;
 esac
 if ! command -v "$manager" >/dev/null 2>&1; then
     echo "Install $manager to use this installer." >&2
     exit 1
 fi
-if [ ! -f "$package" ]; then
-    echo "Missing package: $package. Extract the complete archive and try again." >&2
+if [ "$#" -ne 1 ] || [ ! -f "$1" ]; then
+    echo "Extract the complete archive with its matching package and try again." >&2
     exit 1
 fi
-
-set -- "$manager" install "$package"
+set -- "$manager" install "$1"
 if [ "$(id -u)" != 0 ]; then
     if ! command -v sudo >/dev/null 2>&1; then
         echo "Run ./install.sh as an administrator." >&2

@@ -1,6 +1,6 @@
 # Document Studio Spreadsheets
 
-Document Studio Spreadsheets is an offline desktop spreadsheet application for Windows and Linux, designed for personal, educational, and business use.
+**Document Studio Spreadsheets** is a free, open-source desktop spreadsheet application for Windows and Linux, designed for personal, educational, and business use.
 
 From managing household budgets and planning projects to tracking business finances and payroll, it provides an easy way to organize information, perform calculations, and manage records.
 
@@ -22,6 +22,7 @@ All workbooks are stored locally, with no cloud services or accounts required.
 - **Automatic Saving:** Save changes to open workbooks automatically every minute.
 - **Excel & OpenDocument Support:** Open XLSX and ODS spreadsheets.
 - **Offline Operation:** No accounts, cloud services, or internet connection required for normal use.
+- **Built-in Updater:** Manually check for, download, and install new updates directly from the application.
 
 ## File Compatibility
 
@@ -32,27 +33,33 @@ All workbooks are stored locally, with no cloud services or accounts required.
 
 **Note:** Complex formatting, charts, and pivot tables may not be preserved when saving imported spreadsheets. ODS formatting is not preserved.
 
-## Downloads
+## Download & Installation
 
-Download the latest version from the repository's **Releases** section.
+Document Studio Spreadsheets is available for **Windows and Linux**.
 
-| Platform | Package |
+| Platform | Available Format |
 |---|---|
-| Windows | `.exe` Installer |
-| Fedora Linux | `.rpm` |
-| Debian / Ubuntu Linux | `.deb` |
-| Other Linux Distributions | `.tar.gz` |
+| Windows (x64) | EXE Installer |
+| Fedora / RPM-based Linux | RPM Package |
+| Debian / Ubuntu-based Linux | DEB Package |
+| Other compatible Linux distributions | TAR.GZ Installer |
 
 All packages target 64-bit Intel and AMD systems.
 
-Linux requires glibc 2.39 or newer, GTK 3, and WebKitGTK 4.1.
+Download the latest available version from the **[GitHub Releases](../../releases)** page.
 
-## License
+*Note: Linux builds require glibc 2.39 or newer, GTK 3, and WebKitGTK 4.1.*
+
+## Open Source
+
+Document Studio Spreadsheets' original source code is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)**.
 
 Copyright © 2026 Forbidden_Fantasy.
 
-See the [LICENSE](LICENSE) file for the application license and [third-party notices](docs/THIRD-PARTY-NOTICES.md) for included dependencies.
+Third-party libraries and other bundled resources retain their respective licenses.
+
+See [LICENSE](LICENSE) and [Third-Party Notices](docs/THIRD-PARTY-NOTICES.md) for details.
 
 ---
 
-**Created by Forbidden_Fantasy**
+Developed by **Forbidden_Fantasy**.

@@ -1,6 +1,7 @@
 <script lang="ts">
   import TemplateChooser from "./TemplateChooser.svelte";
   import TemplateBuilder from "./TemplateBuilder.svelte";
+  import UpdateButton from "./UpdateButton.svelte";
   function savedTemplates(){try{return JSON.parse(localStorage.getItem("dss-custom-templates")||"{}");}catch{return {};}}
   let customTemplate=$state<any>({name:"My template",sheets:{}}),templateCatalog=$state<any[]>([]);
   let selectedWorksheets = $derived(templateCatalog.filter(sheet => customTemplate.sheets?.[sheet.name]?.enabled));
@@ -24,7 +25,7 @@
     modal = $state(""),
     errorText = $state(""),
     status = $state("Ready · all files stay on this computer");
-  let theme = $state("plum"),
+  let theme = $state("system"),
     mode = $state("Simple"),
     zoom = $state(100),
     scale = $state(100),
@@ -147,7 +148,19 @@
     }
   });
   $effect(() => {
-    document.documentElement.dataset.theme = theme;
+    if (theme !== "system") {
+      document.documentElement.dataset.theme = theme;
+      return;
+    }
+    const appearance = window.matchMedia("(prefers-color-scheme: dark)");
+    const apply = () => {
+      document.documentElement.dataset.theme = appearance.matches ? "dark" : "light";
+    };
+    apply();
+    appearance.addEventListener("change", apply);
+    return () => appearance.removeEventListener("change", apply);
+  });
+  $effect(() => {
     document.documentElement.style.fontSize = `${(14 * scale) / 100}px`;
   });
   $effect(() => {
@@ -169,7 +182,7 @@
       templates = [...v.templates,...Object.keys(savedTemplates()).map(n=>"Saved: "+n)];
       recent = v.recent;
       recovery = v.recovery;
-      theme = v.settings.theme || "plum";
+      theme = v.settings.theme || "system";
       mode = v.settings.mode || "Simple";
       zoom = v.settings.zoom || 100;
       scale = v.settings.scale || 100;
@@ -370,10 +383,12 @@
       docs[index].dirty = false;
     }
   }
-  let autosaving = false;
-  async function autosave() {
-    if (autosaving) return;
-    autosaving = true;
+  let pendingAutosave: Promise<void> | null = null;
+  function autosave() {
+    pendingAutosave ??= autosaveWorkbooks().finally(() => { pendingAutosave = null; });
+    return pendingAutosave;
+  }
+  async function autosaveWorkbooks() {
     try {
       if (page === "sheet" && inputDirty && doc) {
         const draft = { id: doc.id, sheet, row, column, value: input };
@@ -395,7 +410,22 @@
         } catch (e) { error(e); }
       }
       if (page === "library") await refreshLibrary();
-    } catch (e) { error(e); } finally { autosaving = false; }
+    } catch (e) { error(e); }
+  }
+  async function saveBeforeUpdate() {
+    if (modal || document.querySelector(".business-modal")) {
+      throw new Error("Finish the open dialog before updating.");
+    }
+    await pendingAutosave;
+    if (doc && (editing || inputDirty) && !(await commit())) {
+      throw new Error("Your cell edit could not be saved. Review it before updating.");
+    }
+    for (const workbook of docs.filter(d => d.dirty)) {
+      await storeWorkbook(workbook.id);
+    }
+    if (editing || inputDirty || docs.some(d => d.dirty)) {
+      throw new Error("A workbook still has unsaved changes. Save it before updating.");
+    }
   }
   async function saveDoc(as = false) {
     if (!doc) return;
@@ -552,7 +582,7 @@
     }
   }
   async function keydown(e: KeyboardEvent) {
-    if (licenseDialog?.open) return;
+    if (document.querySelector("dialog[open]")) return;
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "n") {
       e.preventDefault();
       if (!modal) void newWorkbook();
@@ -877,6 +907,7 @@
         ><button class="primary" onclick={() => void newWorkbook()}
           >+ New workbook</button
         >
+        <UpdateButton {saveBeforeUpdate} />
         <button class="support-button" type="button" title="Support Forbidden_Fantasy on Ko-fi (opens in your browser)"
           onclick={() => invoke("open_support_page").catch(error)}>
           <img src="/kofi-logo.png" alt="" />
@@ -1473,9 +1504,9 @@
       {:else if modal === "addSheets"}<form onsubmit={e=>{e.preventDefault();attachSheets();}}>{#if !doc.metadata.business && usesBusinessSheets}<div class="form-grid"><label>Workbook name<input required bind:value={business.name} /></label><label>Country<input required bind:value={business.country} /></label><label>Currency code<input required maxlength="3" bind:value={business.currency} /></label><label>Month<input required type="month" bind:value={business.period} /></label></div>{/if}<TemplateBuilder bind:value={customTemplate} catalog={templateCatalog} locked={doc.sheets.map((s:any)=>s.name)} /><button class="primary">Add selected worksheets</button></form>
       {:else if modal === "settings"}<label
           >Theme<select bind:value={theme} onchange={prefs}
-            ><option value="plum">Signature plum</option><option value="light"
-              >Standard light</option
-            ><option value="dark">Standard dark</option></select
+            ><option value="system">System</option><option value="light"
+              >Light</option
+            ><option value="dark">Dark</option><option value="plum">Signature plum</option></select
           ></label
         ><label
           >Interface mode<select bind:value={mode} onchange={prefs}

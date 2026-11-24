@@ -5,11 +5,14 @@ import sys
 import os
 import hashlib
 import json
+import fnmatch
 
 root = Path(__file__).resolve().parents[1]
 destination = Path(sys.argv[1]).resolve()
 archive_root = sys.argv[2] if len(sys.argv) > 2 else root.name
-excluded = {"node_modules", "target", "dist", "release", ".git", "__pycache__", "installed-v3", "startup-test-profile"}
+excluded = {"node_modules", "target", "dist", "release", ".git", "__pycache__", "installed-v3", "startup-test-profile", ".codex", ".aws", ".agents"}
+excluded_files = ("AGENTS.md", "SOURCE-MANIFEST.json", ".env", ".env.*", ".npmrc", "*.log",
+                  "*.zip", "*.exe", "*.deb", "*.rpm", "*.tar.gz", "*.key", "*.pem", "*.pfx")
 destination.parent.mkdir(parents=True, exist_ok=True)
 manifest = {}
 with zipfile.ZipFile(destination, "x", zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
@@ -20,7 +23,7 @@ with zipfile.ZipFile(destination, "x", zipfile.ZIP_DEFLATED, compresslevel=9) as
         for filename in sorted(files):
             path = Path(directory) / filename
             relative = path.relative_to(root)
-            if path.suffix not in {".log", ".zip"} and filename != "SOURCE-MANIFEST.json":
+            if not any(fnmatch.fnmatchcase(filename, pattern) for pattern in excluded_files):
                 name = (Path(archive_root) / relative).as_posix()
                 manifest[name] = hashlib.sha256(path.read_bytes()).hexdigest()
                 archive.write(path, name)

@@ -1,7 +1,7 @@
 [package]
 name = "document-studio-spreadsheets"
-version = "1.8.0"
-license = "Apache-2.0"
+version = "1.0.0"
+license = "AGPL-3.0-only"
 edition = "2021"
 description = "Offline spreadsheet and business workbook editor"
 authors = ["Forbidden_Fantasy"]
@@ -28,6 +28,11 @@ spreadsheet-ods = "1.0.4"
 icu_locale_core = "2"
 regex = "1"
 tempfile = "3"
+semver = "1"
+sha2 = "0.10"
+
+[target.'cfg(target_os = "linux")'.dependencies]
+glib = "0.18"
 
 [target.'cfg(windows)'.dependencies]
 webview2-com = "0.39.1"

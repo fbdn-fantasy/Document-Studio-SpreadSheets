@@ -48,7 +48,7 @@ foreach($case in @('normal','maximized','first-launch')) {
  [void][StartupWindow]::GetWindowRect($h,[ref]$rect);[void][StartupWindow]::GetClientRect($h,[ref]$client)
  $max=[StartupWindow]::IsZoomed($h)
  if($case -eq 'normal' -and ($client.Right -ne 1100 -or $client.Bottom -ne 700 -or $rect.Left -ne 90 -or $rect.Top -ne 80)){throw "First visible bounds incorrect: $($rect|ConvertTo-Json -Compress), client $($client|ConvertTo-Json -Compress)"}
- if($case -eq 'maximized' -and !$max){throw 'First visible window was not maximized'}
+ if($case -in @('maximized','first-launch') -and !$max){throw "First visible window was not maximized in $case"}
  & node (Join-Path $PSScriptRoot 'startup_content.cjs')
  if($LASTEXITCODE -ne 0){throw 'Content verification failed'}
  $results+=@{case=$case;hiddenObserved=$hiddenSeen;observations=$observations;firstVisibleMs=$timer.ElapsedMilliseconds;outer=$rect;client=$client;maximized=$max}

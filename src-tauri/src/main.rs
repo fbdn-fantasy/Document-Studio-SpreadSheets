@@ -6,6 +6,7 @@ mod finance;
 mod live;
 mod templates;
 mod custom;
+mod updates;
 #[cfg(test)]
 mod verification;
 #[cfg(test)]
@@ -757,25 +758,40 @@ fn print_data(
     }
     Ok(json!(data))
 }
-// Visibility belongs to frontend readiness, not saved window state.
+fn window_state_filename() -> String {
+    let directory = std::env::var_os("DSS_TEST_PROFILE")
+        .map(std::path::PathBuf::from)
+        .unwrap_or_default();
+    directory.join(".window-state.json").to_string_lossy().into_owned()
+}
+
+// The window-state plugin restores previous bounds while the webview is hidden.
 #[tauri::command]
 fn show_ready_window(window: tauri::WebviewWindow) -> Result<(), String> {
+    let state_file = window.path().app_config_dir().map_err(err)?.join(window_state_filename());
+    let saved_state = std::fs::read(state_file).ok()
+        .and_then(|bytes| serde_json::from_slice::<Value>(&bytes).ok());
+    if saved_state.as_ref().and_then(|v| v.get(window.label())).is_none() {
+        window.maximize().map_err(err)?;
+    }
     window.show().map_err(err)?;
     window.set_focus().map_err(err)
 }
 
 fn main() {
+    let context = tauri::generate_context!();
+    #[cfg(target_os = "linux")]
+    glib::set_prgname(Some(context.config().identifier.as_str()));
     let app=tauri::Builder::default().plugin(tauri_plugin_single_instance::init(|app,args,_|{if let Some(window)=app.get_webview_window("main"){let _=window.set_focus();}let _=app.emit("open-files",args.into_iter().skip(1).filter(|x|x.ends_with(".xlsx")||x.ends_with(".ods")).collect::<Vec<_>>());})).plugin(tauri_plugin_dialog::init()).plugin(tauri_plugin_window_state::Builder::default()
-            .with_filename(std::env::var_os("DSS_TEST_PROFILE")
-                .map(|path| std::path::PathBuf::from(path).join(".window-state.json").to_string_lossy().into_owned())
-                .unwrap_or_else(|| ".window-state.json".into()))
+            .with_filename(window_state_filename())
             .with_state_flags(tauri_plugin_window_state::StateFlags::all() & !tauri_plugin_window_state::StateFlags::VISIBLE)
             .build())
         .setup(|app|{let directory=std::env::var_os("DSS_TEST_PROFILE").map(std::path::PathBuf::from).unwrap_or(app.path().app_data_dir()?);std::fs::create_dir_all(&directory)?;let db=Connection::open(directory.join("studio.sqlite"))?;db.execute_batch("PRAGMA journal_mode=WAL;PRAGMA synchronous=FULL;CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY,value TEXT);CREATE TABLE IF NOT EXISTS recovery(id TEXT PRIMARY KEY,model BLOB,metadata TEXT,path TEXT,dirty INTEGER);CREATE TABLE IF NOT EXISTS recent(path TEXT PRIMARY KEY,opened TEXT);")?;
             let clean=db.query_row("SELECT value FROM settings WHERE key='clean'",[],|r|r.get::<_,String>(0)).unwrap_or("yes".into());let mut recoverable=vec![];
             if clean=="no"{let mut q=db.prepare("SELECT id,path,metadata FROM recovery WHERE dirty=1")?;for row in q.query_map([],|r|Ok((r.get::<_,String>(0)?,r.get::<_,Option<String>>(1)?,r.get::<_,String>(2)?)))?{let (id,path,meta)=row?;recoverable.push(json!({"id":id,"path":path,"metadata":serde_json::from_str::<Value>(&meta).unwrap_or(Value::Null)}));}}else{db.execute("DELETE FROM recovery",[])?;}
             db.execute("INSERT OR REPLACE INTO settings(key,value) VALUES('clean','no')",[])?;app.manage(Mutex::new(Studio{docs:BTreeMap::new(),db,recoverable,library:directory.join("Workbooks")}));Ok(())})
-        .invoke_handler(tauri::generate_handler![show_ready_window,open_support_page,startup,list_workbooks, template_catalog,add_worksheets,preferences,create_workbook,open_workbook,save_workbook,close_workbook,recover,viewport,cell,action,preview_formula,update_business,set_paid,inventory_view,save_inventory,financial_view,import_periods,print_data,native_print,copy_cells]).build(tauri::generate_context!()).expect("Unable to start Document Studio Spreadsheets");
+        .manage(updates::UpdateState::default())
+        .invoke_handler(tauri::generate_handler![updates::check_for_updates,updates::install_update,show_ready_window,open_support_page,startup,list_workbooks, template_catalog,add_worksheets,preferences,create_workbook,open_workbook,save_workbook,close_workbook,recover,viewport,cell,action,preview_formula,update_business,set_paid,inventory_view,save_inventory,financial_view,import_periods,print_data,native_print,copy_cells]).build(context).expect("Unable to start Document Studio Spreadsheets");
     app.run(|handle, event| {
         if let tauri::RunEvent::Exit = event {
             let state = handle.state::<Shared>();

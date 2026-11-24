@@ -14,4 +14,4 @@ After installation, open Document Studio Spreadsheets from your application
 menu. You can remove the extracted folder and archive. To uninstall the app,
 use your distribution's software manager.
 
-The LICENSE file contains the application license.
+The LICENSE file contains the application license. NOTICE identifies its copyright holder.

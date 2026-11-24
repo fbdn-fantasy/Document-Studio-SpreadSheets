@@ -24,7 +24,7 @@ def main():
     root = Path(__file__).resolve().parents[1]
     installer = root / "scripts" / "linux-installer"
     version = json.loads((root / "package.json").read_text(encoding="utf-8"))["version"]
-    name = f"document-studio-spreadsheets-{version}-linux-x86_64"
+    name = f"Document-Studio-Spreadsheets-V{version}"
     args.output_dir.mkdir(parents=True, exist_ok=True)
     destination = args.output_dir / f"{name}.tar.gz"
 
@@ -33,8 +33,9 @@ def main():
         ("install.sh", installer / "install.sh", 0o755),
         ("INSTALL.txt", installer / "INSTALL.txt", 0o644),
         ("LICENSE", root / "LICENSE", 0o644),
-        ("packages/document-studio-spreadsheets.deb", args.deb, 0o644),
-        ("packages/document-studio-spreadsheets.rpm", args.rpm, 0o644),
+        ("NOTICE", root / "NOTICE", 0o644),
+        (f"packages/{args.deb.name}", args.deb, 0o644),
+        (f"packages/{args.rpm.name}", args.rpm, 0o644),
     ]
     with TemporaryDirectory(dir=args.output_dir) as work:
         temporary = Path(work) / destination.name

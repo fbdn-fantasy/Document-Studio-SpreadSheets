@@ -1088,18 +1088,21 @@ dependencies = [
 
 [[package]]
 name = "document-studio-spreadsheets"
-version = "1.8.0"
+version = "1.0.0"
 dependencies = [
  "calamine",
  "chrono",
+ "glib",
  "icu_locale_core",
  "ironcalc",
  "open",
  "regex",
  "rusqlite",
  "rust_decimal",
+ "semver",
  "serde",
  "serde_json",
+ "sha2",
  "spreadsheet-ods",
  "tauri",
  "tauri-build",
